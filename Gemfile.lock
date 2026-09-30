@@ -1,37 +1,37 @@
 PATH
   remote: packages/rubygems/x-mori-console-prefix
   specs:
-    x-mori-console-prefix (1.0.1)
+    x-mori-console-prefix (1.1.0)
 
 PATH
   remote: packages/rubygems/x-mori-git-repo-info
   specs:
-    x-mori-git-repo-info (1.0.1)
+    x-mori-git-repo-info (1.1.0)
 
 PATH
   remote: packages/rubygems/x-mori-once-async
   specs:
-    x-mori-once-async (1.0.1)
+    x-mori-once-async (1.1.0)
 
 PATH
   remote: packages/rubygems/x-mori-package-version
   specs:
-    x-mori-package-version (1.0.1)
+    x-mori-package-version (1.1.0)
 
 PATH
   remote: packages/rubygems/x-mori-port-check
   specs:
-    x-mori-port-check (1.0.1)
+    x-mori-port-check (1.1.0)
 
 PATH
   remote: packages/rubygems/x-mori-redact-secrets
   specs:
-    x-mori-redact-secrets (1.0.1)
+    x-mori-redact-secrets (1.1.0)
 
 PATH
   remote: packages/rubygems/xmori-copy-to-clipboard-cli
   specs:
-    xmori-copy-to-clipboard-cli (1.0.1)
+    xmori-copy-to-clipboard-cli (1.1.0)
 
 GEM
   remote: https://rubygems.org/

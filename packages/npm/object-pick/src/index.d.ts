@@ -1,10 +1,22 @@
 /**
  * Copy selected own, enumerable properties into a new object.
  *
- * Missing keys are ignored. The result has a null prototype so special property
- * names cannot alter its prototype.
+ * Keys that are missing, inherited, or non-enumerable are skipped, so
+ * `objectPick(user, ['toString'])` returns an empty object. String and symbol keys
+ * are both supported. The source is not changed, and values are copied by
+ * reference (a shallow copy).
+ *
+ * The result has a null prototype, so a key such as `__proto__` becomes an
+ * ordinary property instead of changing the prototype. Spread it
+ * (`{ ...picked }`) if you need a normal object.
+ *
+ * @example
+ * const user = { id: 7, name: 'Ada', password: 'hunter2' };
+ * objectPick(user, ['id', 'name']); // { id: 7, name: 'Ada' }
+ *
  * @param object - Source object.
- * @param keys - Keys to include.
- * @returns A new object containing the requested own properties.
+ * @param keys - Keys to include, in the order they should appear.
+ * @returns A new null-prototype object containing the requested properties.
+ * @throws TypeError when object is not an object or keys is not an array.
  */
 export function objectPick<T extends object, K extends keyof T>(object: T, keys: readonly K[]): Pick<T, K>;

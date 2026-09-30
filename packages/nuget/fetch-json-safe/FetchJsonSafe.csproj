@@ -1,10 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework><ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable><GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <PackageId>XMori.FetchJsonSafe</PackageId><Version>1.0.1</Version>
+    <PackageId>XMori.FetchJsonSafe</PackageId><Version>1.1.0</Version>
     <Description>Return a typed result for JSON GET requests.</Description><Authors>x-mori</Authors>
     <PackageLicenseExpression>MIT</PackageLicenseExpression><PackageReadmeFile>README.md</PackageReadmeFile>
-    <RepositoryUrl>https://github.com/x-mori/minimori-packages</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/x-mori/minimori-packages/tree/main/packages/nuget/fetch-json-safe</PackageProjectUrl><RepositoryUrl>https://github.com/x-mori/minimori-packages</RepositoryUrl><RepositoryType>git</RepositoryType>
   </PropertyGroup>
   <ItemGroup><None Include="README.md" Pack="true" PackagePath="/" /></ItemGroup>
 </Project>

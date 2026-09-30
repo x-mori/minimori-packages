@@ -1,7 +1,7 @@
 {
   "name": "minimori-packages",
   "private": true,
-  "version": "1.0.1",
+  "version": "1.1.0",
   "packageManager": "pnpm@11.5.1",
   "scripts": {
     "test:npm": "pnpm --recursive test",

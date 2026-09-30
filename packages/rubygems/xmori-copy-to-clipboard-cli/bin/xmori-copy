@@ -1,3 +1,12 @@
 #!/usr/bin/env ruby
-require 'fujiblaze/copy_to_clipboard_cli'
-FujiBlaze::CopyToClipboardCli.copy($stdin.read)
+# frozen_string_literal: true
+
+# Copies standard input to the system clipboard, for example: echo hello | xmori-copy
+require 'x_mori/copy_to_clipboard_cli'
+
+begin
+  XMori::CopyToClipboardCli.copy($stdin.binmode.read)
+rescue RuntimeError => e
+  warn "xmori-copy: #{e.message}"
+  exit 1
+end

@@ -1,37 +1,64 @@
+using System.Runtime.InteropServices;
 namespace XMori.RateLimitMemory;
-/// <summary>Tracks a fixed-window request limit per string key in memory.</summary>
-/// <remarks>State is local to one process. Call RemoveExpired to reclaim inactive keys.</remarks>
+/// <summary>Enforces a fixed-window request limit per string key, in memory.</summary>
+/// <remarks>
+/// <para>Each key gets its own window, which starts at that key's first request. Up to the limit of requests are
+/// allowed in the window; further requests are refused until the window has fully elapsed, and the next request then
+/// starts a new window. Because windows are fixed, a client can make up to twice the limit in a short burst that spans
+/// a window boundary.</para>
+/// <para>State lives in this process only, so each server instance counts separately. Entries are never removed
+/// automatically; call <see cref="RemoveExpired"/> periodically when keys are unbounded, such as IP addresses.
+/// One instance is safe to share between threads.</para>
+/// </remarks>
+/// <example>
+/// <code>
+/// var limiter = new MemoryRateLimiter(limit: 5, window: TimeSpan.FromMinutes(1));
+/// if (!limiter.TryAcquire(clientIp)) return Results.StatusCode(429);
+/// </code>
+/// </example>
 public sealed class MemoryRateLimiter {
-    private readonly Dictionary<string, (DateTimeOffset Start, int Count)> entries = new();
+    private struct Window { public DateTimeOffset Start; public int Count; }
+    private readonly Dictionary<string, Window> entries = new();
     private readonly object gate = new();
     private readonly int limit;
     private readonly TimeSpan window;
-    /// <summary>Creates a limiter with a maximum count and window length.</summary>
-    /// <param name="limit">Positive number of allowed requests per key and window.</param>
-    /// <param name="window">Positive window duration.</param>
+    /// <summary>Creates a limiter that allows <paramref name="limit"/> requests per key in each <paramref name="window"/>.</summary>
+    /// <param name="limit">Requests allowed per key and window; at least 1.</param>
+    /// <param name="window">Window length; greater than zero.</param>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="limit"/> is less than 1, or <paramref name="window"/> is zero or negative.</exception>
     public MemoryRateLimiter(int limit, TimeSpan window) {
-        if (limit < 1 || window <= TimeSpan.Zero) throw new ArgumentOutOfRangeException(nameof(limit));
+        ArgumentOutOfRangeException.ThrowIfLessThan(limit, 1);
+        if (window <= TimeSpan.Zero) throw new ArgumentOutOfRangeException(nameof(window));
         this.limit = limit; this.window = window;
     }
-    /// <summary>Consumes one slot for a key when its current window has capacity.</summary>
-    /// <param name="key">Caller-defined identity to limit.</param>
-    /// <param name="now">Optional clock value, useful for deterministic tests.</param>
-    /// <returns>True when the request is allowed; false when the limit is reached.</returns>
+    /// <summary>Uses one request slot for <paramref name="key"/> if its current window has capacity.</summary>
+    /// <param name="key">Caller-defined identity to limit, such as a user ID, API key, or IP address. Compared ordinally.</param>
+    /// <param name="now">Clock value to use instead of <see cref="DateTimeOffset.UtcNow"/>; useful for tests.</param>
+    /// <returns><see langword="true"/> if the request is allowed; <see langword="false"/> if the key has reached its limit. A refused request does not count.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="key"/> is <see langword="null"/>.</exception>
     public bool TryAcquire(string key, DateTimeOffset? now = null) {
         ArgumentNullException.ThrowIfNull(key);
         var time = now ?? DateTimeOffset.UtcNow;
         lock (gate) {
-            if (!entries.TryGetValue(key, out var state) || time - state.Start >= window) state = (time, 0);
+            ref var state = ref CollectionsMarshal.GetValueRefOrAddDefault(entries, key, out bool exists);
+            if (!exists || time - state.Start >= window) { state.Start = time; state.Count = 0; }
             if (state.Count >= limit) return false;
-            entries[key] = (state.Start, state.Count + 1);
+            state.Count++;
             return true;
         }
     }
-    /// <summary>Removes key entries whose fixed window has expired.</summary>
-    /// <param name="now">Optional clock value.</param>
-    /// <returns>The number of removed entries.</returns>
+    /// <summary>Removes keys whose window has fully elapsed, freeing their memory.</summary>
+    /// <param name="now">Clock value to use instead of <see cref="DateTimeOffset.UtcNow"/>.</param>
+    /// <returns>The number of removed keys.</returns>
+    /// <remarks>Removing an expired key does not change any result: its next request starts a new window either way.</remarks>
     public int RemoveExpired(DateTimeOffset? now = null) {
         var time = now ?? DateTimeOffset.UtcNow;
-        lock (gate) { var keys = entries.Where(pair => time - pair.Value.Start >= window).Select(pair => pair.Key).ToArray(); foreach (var key in keys) entries.Remove(key); return keys.Length; }
+        lock (gate) {
+            int removed = 0;
+            foreach (var (key, state) in entries) {
+                if (time - state.Start >= window && entries.Remove(key)) removed++;
+            }
+            return removed;
+        }
     }
 }

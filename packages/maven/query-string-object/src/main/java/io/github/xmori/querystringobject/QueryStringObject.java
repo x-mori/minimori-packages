@@ -1,43 +1,91 @@
 package io.github.xmori.querystringobject;
 
+import java.net.URLDecoder;
+import java.net.URLEncoder;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 /**
- * Parse and encode query parameters with repeated keys.
+ * Parses and builds URL query strings, keeping every value of repeated keys.
+ *
+ * <pre>{@code
+ * Map<String, List<String>> params = QueryStringObject.parse("?tag=java&tag=url&q=hello+world");
+ * // {tag=[java, url], q=[hello world]}
+ *
+ * QueryStringObject.encode(Map.of("q", List.of("a&b"))); // "q=a%26b"
+ * }</pre>
+ *
+ * <p>This class is stateless and thread-safe.
  */
 public final class QueryStringObject {
     private QueryStringObject() {}
+
     /**
-     * Parse a query string into an insertion-ordered multimap.
+     * Parses a query string into an insertion-ordered multimap.
      *
-     * Repeated keys retain every value. Percent encoding is decoded as UTF-8, and
-     * plus signs decode to spaces. A leading question mark is optional.
-     * @param query query text, with or without a leading question mark
-     * @return a map from keys to lists of values
-     * @throws IllegalArgumentException for null or invalid encoding
+     * <p>Pairs are separated by {@code &} and split at the first {@code =}. Keys
+     * and values are decoded as UTF-8 form data, so {@code +} becomes a space. A
+     * key without {@code =} gets an empty-string value, and repeated keys keep
+     * every value in order. Empty pairs such as the gap in {@code a=1&&b=2} are
+     * skipped, matching browsers' {@code URLSearchParams}. A leading {@code ?} is
+     * optional. Do not pass a full URL or a fragment.
+     *
+     * @param query query text, with or without a leading {@code ?}
+     * @return a mutable {@link LinkedHashMap} from each key to a mutable list of its values
+     * @throws IllegalArgumentException if query is null or contains an invalid percent escape
      */
-    public static java.util.Map<String, java.util.List<String>> parse(String query) {
-    if (query == null) throw new IllegalArgumentException("query is required");
-    java.util.Map<String, java.util.List<String>> result = new java.util.LinkedHashMap<>();
-    String raw = query.startsWith("?") ? query.substring(1) : query;
-    if (raw.isEmpty()) return result;
-    for (String pair : raw.split("&", -1)) {
-        String[] parts = pair.split("=", 2);
-        String key = java.net.URLDecoder.decode(parts[0], java.nio.charset.StandardCharsets.UTF_8);
-        String value = java.net.URLDecoder.decode(parts.length == 2 ? parts[1] : "", java.nio.charset.StandardCharsets.UTF_8);
-        result.computeIfAbsent(key, ignored -> new java.util.ArrayList<>()).add(value);
+    public static Map<String, List<String>> parse(String query) {
+        if (query == null) throw new IllegalArgumentException("query is required");
+        Map<String, List<String>> result = new LinkedHashMap<>();
+        int start = query.startsWith("?") ? 1 : 0;
+        while (start <= query.length()) {
+            int end = query.indexOf('&', start);
+            if (end < 0) end = query.length();
+            if (end > start) {
+                int equals = query.indexOf('=', start);
+                boolean hasValue = equals >= 0 && equals < end;
+                String key = decode(query.substring(start, hasValue ? equals : end));
+                String value = hasValue ? decode(query.substring(equals + 1, end)) : "";
+                result.computeIfAbsent(key, ignored -> new ArrayList<>(1)).add(value);
+            }
+            start = end + 1;
+        }
+        return result;
     }
-    return result;
-}
-/**
- * Encode a multimap as a URL query string.
- *
- * Each list value becomes one key-value pair in map iteration order. Keys and
- * values use UTF-8 form encoding, including plus signs for spaces.
- * @param values map of keys to zero or more values
- * @return query text without a leading question mark
- */
-public static String encode(java.util.Map<String, java.util.List<String>> values) {
-    java.util.List<String> parts = new java.util.ArrayList<>();
-    values.forEach((key, list) -> list.forEach(value -> parts.add(java.net.URLEncoder.encode(key, java.nio.charset.StandardCharsets.UTF_8) + "=" + java.net.URLEncoder.encode(value, java.nio.charset.StandardCharsets.UTF_8))));
-    return String.join("&", parts);
-}
+
+    /**
+     * Encodes a multimap as a query string.
+     *
+     * <p>Each value becomes one {@code key=value} pair, in the map's iteration
+     * order, so use a {@link LinkedHashMap} for a predictable order. Keys and
+     * values use UTF-8 form encoding ({@link URLEncoder}), which writes spaces as
+     * {@code +}. A key with an empty list produces no pairs. The result has no
+     * leading {@code ?}.
+     *
+     * @param values map of keys to zero or more values
+     * @return the encoded query string, possibly empty
+     * @throws IllegalArgumentException if values, a key, a list, or a value is null
+     */
+    public static String encode(Map<String, List<String>> values) {
+        if (values == null) throw new IllegalArgumentException("values are required");
+        StringBuilder result = new StringBuilder();
+        for (Map.Entry<String, List<String>> entry : values.entrySet()) {
+            if (entry.getKey() == null || entry.getValue() == null) throw new IllegalArgumentException("null key or value list");
+            String key = URLEncoder.encode(entry.getKey(), UTF_8);
+            for (String value : entry.getValue()) {
+                if (value == null) throw new IllegalArgumentException("null value");
+                if (result.length() > 0) result.append('&');
+                result.append(key).append('=').append(URLEncoder.encode(value, UTF_8));
+            }
+        }
+        return result.toString();
+    }
+
+    private static String decode(String text) {
+        return URLDecoder.decode(text, UTF_8);
+    }
 }

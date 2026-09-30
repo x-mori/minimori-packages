@@ -1,6 +1,6 @@
 {
   "name": "@x-mori/group-by-key",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "Group items by a property or callback.",
   "type": "module",
   "exports": {
@@ -27,5 +27,9 @@
   "publishConfig": {
     "registry": "https://npm.pkg.github.com"
   },
-  "types": "./src/index.d.ts"
+  "types": "./src/index.d.ts",
+  "homepage": "https://github.com/x-mori/minimori-packages/tree/main/packages/npm/group-by-key#readme",
+  "bugs": {
+    "url": "https://github.com/x-mori/minimori-packages/issues"
+  }
 }

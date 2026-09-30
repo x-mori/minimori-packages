@@ -1,6 +1,6 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion><groupId>io.github.xmori</groupId><artifactId>password-strength-lite</artifactId><version>1.0.1</version>
-  <name>password-strength-lite</name><description>Give basic password quality feedback.</description><url>https://github.com/x-mori/minimori-packages</url>
+  <modelVersion>4.0.0</modelVersion><groupId>io.github.xmori</groupId><artifactId>password-strength-lite</artifactId><version>1.1.0</version>
+  <name>password-strength-lite</name><description>Give basic password quality feedback.</description><url>https://github.com/x-mori/minimori-packages/tree/main/packages/maven/password-strength-lite</url>
   <licenses><license><name>MIT License</name><url>https://opensource.org/licenses/MIT</url></license></licenses>
   <scm><url>https://github.com/x-mori/minimori-packages</url><connection>scm:git:https://github.com/x-mori/minimori-packages.git</connection></scm>
   <properties><maven.compiler.release>17</maven.compiler.release><project.build.sourceEncoding>UTF-8</project.build.sourceEncoding></properties>

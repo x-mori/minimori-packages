@@ -1,6 +1,6 @@
 {
   "name": "@x-mori/object-omit",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "Copy an object without selected own properties.",
   "type": "module",
   "exports": {
@@ -27,5 +27,9 @@
   "publishConfig": {
     "registry": "https://npm.pkg.github.com"
   },
-  "types": "./src/index.d.ts"
+  "types": "./src/index.d.ts",
+  "homepage": "https://github.com/x-mori/minimori-packages/tree/main/packages/npm/object-omit#readme",
+  "bugs": {
+    "url": "https://github.com/x-mori/minimori-packages/issues"
+  }
 }
